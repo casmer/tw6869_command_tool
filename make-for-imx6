@@ -1,0 +1,19 @@
+#!/bin/bash
+[ "$SDK_LOC" ] || SDK_LOC=/opt/poky/2.3.3
+[ "$SDK_NAME" ] || SDK_NAME=cortexa9hf-neon-poky-linux-gnueabi
+
+[ ! -e ${SDK_LOC}/environment-setup-${SDK_NAME} ] && {
+    echo "Sorry, please verify: ${SDK_LOC}/environment-setup-${SDK_NAME}"
+    exit 1
+}
+
+. ${SDK_LOC}/environment-setup-${SDK_NAME}
+
+SYSROOT=${SDK_LOC}/sysroots/${SDK_NAME}
+PKG_CONFIG_SYSROOT_DIR=${SYSROOT}
+PKG_CONFIG_PATH=${SYSROOT}/usr/lib/pkgconfig
+make clean
+PKG_CONFIG_SYSROOT_DIR=${PKG_CONFIG_SYSROOT_DIR} \
+    PKG_CONFIG_DIR= \
+    RELEASE_DIR=imx6bin \
+    make $@
