@@ -1,11 +1,8 @@
 ### ---
 ## Filename: Makefile
-## Author: Pushpal Sidhu <psidhu@gateworks.com>
-## Created: Wed May 19 12:07:45 2015 (-0700)
+## Author: Casey Gregoire <caseyg@lalosoft.com>
+## Created: Feb 22 2019
 ## Version: 1.0.0
-## Package-Requires: libgstreamer*
-## Last-Updated: Mon Jun 15 18:36:49 2015 (-0700)
-##           By: Pushpal Sidhu
 ##
 ## Compatibility: GNUMakefile
 ##
@@ -74,10 +71,10 @@ DEPS=$(patsubst $(SDIR)/%.c,$(DDIR)/%.d,$(SRCS))
 SRCFILES=$(SRCS) $(HDRS)
 
 
-GST_DEVICE_MODE_LIBS=
-GST_DEVICE_MODE_OBJS=$(ODIR)/gst-device-mode.o
+DEVICE_MODE_LIBS=
+DEVICE_MODE_OBJS=$(ODIR)/tw6869-device-mode.o
 
-APPS:= gst-device-mode
+APPS:= tw6869-device-mode
 
 all: $(APPS)
 
@@ -123,8 +120,8 @@ endef
 
 # Add App Targets here
 	
-gst-device-mode: $(GST_DEVICE_MODE_OBJS)
-	$(call dbg-link,"gst-device-mode")
+tw6869-device-mode: $(DEVICE_MODE_OBJS)
+	$(call dbg-link,"tw6869-device-mode")
 	
 	
 .PHONY: clean tags etags
