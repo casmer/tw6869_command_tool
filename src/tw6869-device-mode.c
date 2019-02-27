@@ -20,10 +20,14 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <glib.h>
+#include <linux/param.h>
 
 #include <asm/types.h> /* for videodev2.h */
 
 #include <linux/videodev2.h>
+
+#define TW6869_HW_RESET_IOCTL BASE_VIDIOC_PRIVATE + 1
+#define TW6869_HW_RESET_SET_DELAY_IOCTL BASE_VIDIOC_PRIVATE + 2
 
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 
@@ -34,8 +38,8 @@ struct my_device_info {
     gchar *dev_name;          /* Video in device */
     gint fd;
     gint field;
-    uint hw_reset;
-
+    gint hw_reset;
+    uint hw_reset_delay_ms;
 };
 
 
@@ -59,7 +63,8 @@ static struct my_device_info info = {
         .dev_name = "/dev/video0",
         .fd = -1,
         .field = 0,
-        .hw_reset = 0,
+        .hw_reset = FALSE,
+        .hw_reset_delay_ms = 0
 };
 
 
@@ -105,10 +110,11 @@ int main (int argc, char *argv[])
         {"help",                   no_argument,       0, '?'},
         {"video-in",               required_argument, 0, 'i'},
         {"field",               required_argument, 0, 'f'},
-        {"hw-rst",               required_argument, 0, 'r'},
+        {"hw-rst",               no_argument, 0, 'r'},
+        {"hw-rst-delay",               required_argument, 0, 'd'},
         { /* Sentinel */ }
     };
-    char *arg_parse = "?hvd:m:p:u:s:i:f:b:l:c:a:r:";
+    char *arg_parse = "?hri:f:d:";
      char *usage = "learn the code!\n";
 
     /* Parse Args */
@@ -139,7 +145,10 @@ int main (int argc, char *argv[])
                 dbg(1, "set video in to: %s", info.dev_name);
                 break;
             case 'r':
-                info.hw_reset = atoi(optarg);
+                info.hw_reset = TRUE;
+                break;
+            case 'd':
+                info.hw_reset_delay_ms = atoi(optarg);
                 break;
             default: /* Default - bad arg */
                 puts(usage);
@@ -167,10 +176,25 @@ int main (int argc, char *argv[])
             print_device_info(fmt1);
         }
 
-        if (info.hw_reset > 0)
+        if (info.hw_reset == TRUE)
         {
-            int result = ioctl(info.fd, info.hw_reset);
+            int result = ioctl(info.fd, TW6869_HW_RESET_IOCTL);
             printf("hw_reset call result was: %d\n",result);
+        }
+
+        if (info.hw_reset_delay_ms > 0)
+        {
+            unsigned long hw_reset_delay = info.hw_reset_delay_ms * HZ /1000;
+            if (hw_reset_delay >0)
+            {
+                printf("hw_reset_delay [%u ms] being send to driver, sending [%lu jiffies].\n", info.hw_reset_delay_ms, hw_reset_delay);
+                int result = ioctl(info.fd, TW6869_HW_RESET_SET_DELAY_IOCTL, (void *)&hw_reset_delay);
+                printf("hw_reset call result was: %d\n",result);
+            }
+            else
+            {
+                printf("hw_reset_delay [%u ms] invalid, results in value [%lu jiffies]. Must use a larger value.\n", info.hw_reset_delay_ms, hw_reset_delay);
+            }
         }
 
         close_device();
